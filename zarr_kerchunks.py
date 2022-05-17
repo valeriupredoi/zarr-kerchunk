@@ -26,14 +26,28 @@ import kerchunk.zarr as zr
 
 def _kerzarr():
    """Load a zarr file with fsspec.kerchunk and mess about."""
-   store = "/home/valeriu/zarr-kerchunks/zarr_object"
+   store = "/home/valeriu/zarr-kerchunk/zarr_object"
    zr_file = zr.single_zarr(store)  # tis a dictionary!
    print(zr_file.keys())
+   print(zr_file[".zgroup"])
+   with fsspec.open(zr_file['tas/.zarray'][0]) as fil:
+       for line in fil.readlines():
+           print(line)
+   so = dict(
+       anon=True, default_fill_cache=False, default_cache_type='first'
+   )
+   #print(dir(zr))
+   #with fsspec.open(zr_file['tas/0.0.0'][0], **so) as fil:
+   #    kerchunk.zarr.SingleHdf5ToZarr(inf, u, inline_threshold=100)
+   #xf = xr.open_dataset(zr_file, engine="zarr")
+   #with zr.fsspec.open(store) as fil:
+   #    print(fil)
+
    return
 
 
 def load_zarr():
-    zarr_dir = "/home/valeriu/zarr-kerchunks/zarr_object"
+    zarr_dir = "/home/valeriu/zarr-kerchunk/zarr_object"
     coll = xr.open_zarr(zarr_dir, consolidated=True)
     return coll
 
