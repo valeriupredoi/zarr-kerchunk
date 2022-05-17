@@ -82,3 +82,31 @@ the var is accessible from here:
            print(line)
 ```
 
+and that returns the var data specs:
+
+```
+b'{\n'
+b'    "chunks": [\n'
+b'        1872,\n'
+b'        192,\n'
+b'        288\n'
+b'    ],\n'
+b'    "compressor": {\n'
+b'        "blocksize": 0,\n'
+b'        "clevel": 5,\n'
+b'        "cname": "lz4",\n'
+b'        "id": "blosc",\n'
+b'        "shuffle": 1\n'
+b'    },\n'
+b'    "dtype": "<f4",\n'
+b'    "fill_value": 1.0000000200408773e+20,\n'
+b'    "filters": null,\n'
+b'    "order": "C",\n'
+b'    "shape": [\n'
+b'        1872,\n'
+b'        192,\n'
+b'        288\n'
+b'    ],\n'
+b'    "zarr_format": 2\n'
+b'}'
+```
