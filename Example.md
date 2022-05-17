@@ -1,4 +1,4 @@
-## Zarr and Kerchung: match made in Hell
+## Zarr and Kerchunks: match made in Hell
 
 ### Installing
 
@@ -16,3 +16,69 @@ import kerchunk.zarr as zr
 store = "/home/valeriu/zarr-kerchunks/zarr_object"
 zr_file = zr.single_zarr(store)  # tis a dictionary!
 ```
+
+The `zr_file` object is a Python dictionary with the following keys:
+
+```
+dict_keys(['.zattrs', '.zgroup', '.zmetadata', 'height/.zarray', 'height/.zattrs', 'height/0', 'lat/.zarray', 'lat/.zattrs', 'lat/0', 'lat_bnds/.zarray', 'lat_bnds/.zattrs', 'lat_bnds/0.0', 'lon/.zarray', 'lon/.zattrs', 'lon/0', 'lon_bnds/.zarray', 'lon_bnds/.zattrs', 'lon_bnds/0.0', 'tas/.zarray', 'tas/.zattrs', 'tas/0.0.0', 'time/.zarray', 'time/.zattrs', 'time/0', 'time_bnds/.zarray', 'time_bnds/.zattrs', 'time_bnds/0.0'])
+```
+
+and we can examine the values eg `zr_file["lon/.zarray"]` is a list of one file URL:
+
+```
+zr_file["lon/.zarray"] = ['file:///home/valeriu/zarr-kerchunk/zarr_object/lon/.zarray']
+
+```
+
+that can then be opened with:
+
+```python
+   with fsspec.open(zr_file["lon/.zarray"][0]) as fil:
+       for line in fil.readlines():
+           print(line)
+```
+
+which returns a bunch of bytes-stuff:
+
+```
+b'{\n'
+b'    "chunks": [\n'
+b'        288\n'
+b'    ],\n'
+b'    "compressor": {\n'
+b'        "blocksize": 0,\n'
+b'        "clevel": 5,\n'
+b'        "cname": "lz4",\n'
+b'        "id": "blosc",\n'
+b'        "shuffle": 1\n'
+b'    },\n'
+b'    "dtype": "<f8",\n'
+b'    "fill_value": "NaN",\n'
+b'    "filters": null,\n'
+b'    "order": "C",\n'
+b'    "shape": [\n'
+b'        288\n'
+b'    ],\n'
+b'    "zarr_format": 2\n'
+b'}'
+```
+
+or even better - but don't execue this - it'll print a bazillion lines (lots of data eh):
+
+```python
+   so = dict(
+       anon=True, default_fill_cache=False, default_cache_type='first'
+   )
+   with fsspec.open(zr_file['tas/0.0.0'][0], **so) as fil:
+       for line in fil.readlines():
+           print(line)
+```
+
+the var is accessible from here:
+
+```python
+   with fsspec.open(zr_file['tas/.zarray'][0]) as fil:
+       for line in fil.readlines():
+           print(line)
+```
+
