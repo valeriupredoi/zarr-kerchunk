@@ -6,44 +6,40 @@ import fsspec
 import numpy as np
 import xarray as xr
 import time
+import yaml
 import zarr
-from fsspec.implementations.reference import ReferenceFileSystem
 
+import kerchunk
 import kerchunk.zarr as zr
+print("Kerchunk library at: ", kerchunk.zarr.__file__)
 
-# def load_reference():
-    # store = "/home/valeriu/Excalibur-and-Parallel-Data/initial_exploration/initial_testing/zarr_object"
-    # z1 = zarr.open(store)
-    # a = np.arange(10)
-    # zarr.save("example.zarr", a)
-    # ref_ds = ReferenceFileSystem(store)  # (fo=z1)
-    # returns a ReferenceFileSystem object
-
-    # play around with the zr module
-    # zr_file = zr.single_zarr(store)
-    # print(dir(zr_file))
-    # return zr_file
 
 def _kerzarr():
-   """Load a zarr file with fsspec.kerchunk and mess about."""
-   store = "/home/valeriu/zarr-kerchunk/zarr_object"
-   zr_file = zr.single_zarr(store)  # tis a dictionary!
-   print(zr_file.keys())
-   print(zr_file[".zgroup"])
-   with fsspec.open(zr_file['tas/.zarray'][0]) as fil:
-       for line in fil.readlines():
-           print(line)
-   so = dict(
-       anon=True, default_fill_cache=False, default_cache_type='first'
-   )
-   #print(dir(zr))
-   #with fsspec.open(zr_file['tas/0.0.0'][0], **so) as fil:
-   #    kerchunk.zarr.SingleHdf5ToZarr(inf, u, inline_threshold=100)
-   #xf = xr.open_dataset(zr_file, engine="zarr")
-   #with zr.fsspec.open(store) as fil:
-   #    print(fil)
+    """Load a zarr file with fsspec.kerchunk and mess about."""
+    store = "/home/valeriu/zarr-kerchunk/zarr_object"
 
-   return
+    so = dict(
+        anon=True, default_fill_cache=False, default_cache_type='first'
+    )
+
+    zr_file = zr.single_zarr(store, storage_options=so)  # tis a dictionary!
+    print("Zarr file keys: ", zr_file.keys())
+    var_metadata_file = "./tas.yml"
+    with fsspec.open(zr_file['tas/.zarray'][0]) as fil:
+        lines = fil.readlines()
+        with open(var_metadata_file, 'w') as file:
+            yaml.safe_dump(lines, file, allow_unicode=True, default_flow_style=False)
+        with open(var_metadata_file, 'rb') as file:
+            params = yaml.safe_load(file)
+            chunk_t = int(params[2].decode("ascii").strip().strip(","))
+            chunk_x = int(params[3].decode("ascii").strip().strip(","))
+            chunk_y = int(params[4].decode("ascii").strip())
+            print("Chunks: ", chunk_t, chunk_x, chunk_y)
+    with fsspec.open(zr_file['tas/0.0.0'][0]) as fil:
+        print(fil.readlines())
+
+
+    return
 
 
 def load_zarr():
