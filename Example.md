@@ -74,7 +74,9 @@ or even better - but don't execue this - it'll print a bazillion lines (lots of 
            print(line)
 ```
 
-the var is accessible from here:
+`fil.readlines()` returns the flattened data array - a list of binaries of len 1872x192x288 = 104620032.
+
+The variable metadata is accessible from here:
 
 ```python
    with fsspec.open(zr_file['tas/.zarray'][0]) as fil:
@@ -110,3 +112,25 @@ b'    ],\n'
 b'    "zarr_format": 2\n'
 b'}'
 ```
+
+The newly loaded file is usable with `xarray` like this:
+
+```python
+    ds = xr.open_dataset(
+        "reference://", engine="zarr",
+        backend_kwargs={
+            "storage_options": {
+                "fo": zr_file,
+            },
+            "consolidated": False
+        }
+    )
+    print(f"Data file loaded by Xarray\n: {ds}")
+
+    # big_chunks = chunks_t
+    mean = da.mean(ds["tas"]).compute()
+    print(f"Kerchunk/fsspec mean: {mean}")
+```
+
+but ideally, we'd want to "steal" methods from `xarray` (specifically methods that return chunks and blobs)
+and use them oustide the need to have the `xarray` package installed.
