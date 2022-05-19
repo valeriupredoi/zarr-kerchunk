@@ -14,6 +14,8 @@ import kerchunk
 import kerchunk.zarr as zr
 import dask.array as da
 
+from collections.abc import MutableMapping
+
 
 print(f"Kerchunk library at: {kerchunk.zarr.__file__}")
 
@@ -79,8 +81,60 @@ def _kerzarr():
     mean = da.mean(ds["tas"]).compute()
     print(f"Kerchunk/fsspec mean: {mean}")
 
-
     return
+
+
+def _kerzarr_multiblob():
+    """Use kerchunks for multinlobbed Zarrs."""
+    store = "/home/valeriu/zarr-kerchunk/example.zarr"
+    so = dict(
+        anon=True, default_fill_cache=False, default_cache_type='first'
+    )
+
+    # understand the Zarr file structure
+    # single_zarr is a nice wrapper to fsspec zarr loader
+    zr_file = zr.single_zarr(store, storage_options=so)  # tis a dictionary!
+    print(zr_file)
+    print(f"Zarr file keys: {zr_file.keys()}")
+    # with fsspec.open(zr_file["0.1"][0]) as fil:
+    #     lines = fil.readlines()
+
+    return zr_file
+
+
+class FileChunkStore(MutableMapping):
+
+    def __init__(self, path, offsets):
+        self.path = path
+        self.offsets = offsets
+
+    def __getitem__(self, key):
+        res = self.offsets[key] 
+        if not "offset" in res:
+            # metadata not byte offsets
+            return res
+        with open(self.path, 'rb') as f:
+            f.seek(res["offset"])
+            cbytes = f.read(res["size"])
+        return cbytes
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError
+
+    def __delitem__(self, key):
+        raise NotImplementedError
+
+    def __containsitem__(self, key):
+        key in self.offsets
+
+    def __len__(self):
+        return len(self.offsets)
+
+    def __iter__(self):
+        return self.keys()
+
+    def keys(self):
+        return self.offsets.keys()
 
 
 def _load_zarr():
@@ -95,6 +149,7 @@ def _load_zarr():
 
 def main():
     """Run the routine."""
+    # run simple loader
     t0 = time.time()
     zarr_data = _load_zarr()
     t1 = time.time()
@@ -102,10 +157,16 @@ def main():
     print("Simple global mean took %.2f seconds" % dt1)
     print("\n")
 
-    kerchunks_data = _kerzarr()    
-    t2 = time.time()
-    dt = float(t2) - float(t1)
-    print("Kerchunk mean took %.2f seconds" % dt)
+    # test the multiblobbyness
+    zfile = _kerzarr_multiblob()
+
+    dff = FileChunkStore(zfile, {})
+    print(dff.keys())
+
+    # kerchunks_data = _kerzarr()    
+    # t2 = time.time()
+    # dt = float(t2) - float(t1)
+    # print("Kerchunk mean took %.2f seconds" % dt)
 
 
 if __name__ == '__main__':
