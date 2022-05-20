@@ -58,13 +58,19 @@ def _kerzarr_multiblob():
     shape = ds.shape
     chunks = ds.chunks
     chunk_offsets = [range(0, s, c) for s, c in zip(shape, chunks)]
-    print("Chunk offsets", chunk_offsets)
+    print("Chunk offsets", [tuple(k) for k in chunk_offsets])
     print("Zarr number of chunks", len(list(itertools.product(*chunk_offsets))))
     for offset in itertools.product(*chunk_offsets):
         print("Slice offset", offset)
         sel = tuple(slice(o, min(s, o + c))
                     for o, s, c in zip(offset, shape, chunks))
-        print(f"Slice {sel}")
+        islice = ds[sel]
+        print(f"Slice indices {sel}")
+        slice_size = islice.size * islice.dtype.itemsize
+        print(f"Slice size {slice_size}")
+
+    tot_size = ds.size * ds.dtype.itemsize
+    print(f"Total chunks size {tot_size}")
 
     return zr_file
 
@@ -78,7 +84,7 @@ def test_get_chunk_details():
     from io import BytesIO
     buf = BytesIO()
     with h5py.File(buf, 'w') as fout:
-        fout.create_dataset('test', shape=(10, 10), chunks=(5, 5), dtype='i4')
+        fout.create_dataset('test', shape=(10, 10), chunks=(5, 5), dtype='f8')
         fout['test'][:] = 1
 
     buf.seek(0)
@@ -89,9 +95,9 @@ def test_get_chunk_details():
         print("h5py number of chunks", num_chunks)
         for j in range(num_chunks):
             si = ds.get_chunk_info(j)
-            print("Blob (Slice) (chunk offset) ", si.chunk_offset)
-            print("Blob Byte offset", si.byte_offset)
-            print("Blob size", si.size)
+            print("Blob (Slice) chunk offset", si.chunk_offset)
+            print("Blob (Slice) byte offset", si.byte_offset)
+            print("Blob (Slice) size", si.size)
 
 
 def main():
