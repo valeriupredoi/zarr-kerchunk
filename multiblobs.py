@@ -60,6 +60,7 @@ def _kerzarr_multiblob():
     chunk_offsets = [range(0, s, c) for s, c in zip(shape, chunks)]
     print("Chunk offsets", chunk_offsets)
     for offset in itertools.product(*chunk_offsets):
+        print("Slice offset", offset)
         sel = tuple(slice(o, min(s, o + c))
                     for o, s, c in zip(offset, shape, chunks))
         print(f"Slice {sel}")
@@ -83,18 +84,13 @@ def test_get_chunk_details():
     with h5py.File(buf, 'r') as fin:
         ds = fin['test'].id
 
-        print("h5py number of chunks", ds.get_num_chunks())
-        for j in range(4):
+        num_chunks = ds.get_num_chunks()
+        print("h5py number of chunks", num_chunks)
+        for j in range(num_chunks):
             si = ds.get_chunk_info(j)
-            print("Slice (chunk offset) ", si.chunk_offset)
-            print("Byte offset", si.byte_offset)
-            print("Slice size", si.size)
-
-        #si = ds.get_chunk_info_by_coord((0, 0))
-        #assert si.chunk_offset == (0, 0)
-        #assert si.filter_mask == 0
-        #assert si.byte_offset is not None
-        #assert si.size > 0
+            print("Blob (Slice) (chunk offset) ", si.chunk_offset)
+            print("Blob Byte offset", si.byte_offset)
+            print("Blob size", si.size)
 
 
 def main():
