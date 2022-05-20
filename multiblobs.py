@@ -39,6 +39,8 @@ def _kerzarr_multiblob():
     print(f"Data chunks: {ds.chunks}")
 
     # Zarr chunking information
+    # from zarr.convenience._copy(); convenience module l.897
+    # https://zarr.readthedocs.io/en/stable/api/convenience.html#zarr.convenience.copy
     shape = ds.shape
     chunks = ds.chunks
     chunk_offsets = [range(0, s, c) for s, c in zip(shape, chunks)]
