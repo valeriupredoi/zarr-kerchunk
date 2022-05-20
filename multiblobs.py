@@ -59,6 +59,7 @@ def _kerzarr_multiblob():
     chunks = ds.chunks
     chunk_offsets = [range(0, s, c) for s, c in zip(shape, chunks)]
     print("Chunk offsets", chunk_offsets)
+    print("Zarr number of chunks", len(list(itertools.product(*chunk_offsets))))
     for offset in itertools.product(*chunk_offsets):
         print("Slice offset", offset)
         sel = tuple(slice(o, min(s, o + c))
