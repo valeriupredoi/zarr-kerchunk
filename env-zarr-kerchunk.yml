@@ -5,6 +5,7 @@ channels:
 
 dependencies:
   - dask
+  - h5py
   - kerchunk
   - netcdf4
   - xarray
