@@ -1,5 +1,6 @@
 import os
 import fsspec
+import h5py
 import itertools
 import numpy as np
 import xarray as xr
@@ -17,7 +18,7 @@ from collections.abc import MutableMapping
 
 print(f"Kerchunk library at: {kerchunk.zarr.__file__}")
 print(f"Zarr library at: {zarr.__file__}")
-
+print(f"h5py library at: {h5py.__file__}")
 
 def _kerzarr_multiblob():
     """Use kerchunks for multinlobbed Zarrs."""
@@ -52,9 +53,42 @@ def _kerzarr_multiblob():
 
     return zr_file
 
+
+# copy of h5py test in 
+# /lib/python3.10/site-packages/h5py/tests/test_dataset.py
+# with iden input array as Zarr file above
+def test_get_chunk_details():
+    from io import BytesIO
+    buf = BytesIO()
+    with h5py.File(buf, 'w') as fout:
+        fout.create_dataset('test', shape=(10, 10), chunks=(5, 5), dtype='i4')
+        fout['test'][:] = 1
+
+    buf.seek(0)
+    with h5py.File(buf, 'r') as fin:
+        ds = fin['test'].id
+
+        assert ds.get_num_chunks() == 100
+        for j in range(100):
+            offset = tuple(np.array(np.unravel_index(j, (10, 10))) * 10)
+
+            si = ds.get_chunk_info(j)
+            assert si.chunk_offset == offset
+            assert si.filter_mask == 0
+            assert si.byte_offset is not None
+            assert si.size > 0
+
+        si = ds.get_chunk_info_by_coord((0, 0))
+        assert si.chunk_offset == (0, 0)
+        assert si.filter_mask == 0
+        assert si.byte_offset is not None
+        assert si.size > 0
+
+
 def main():
     """Run the damn thing."""
     zrf = _kerzarr_multiblob()
+    test_get_chunk_details()
 
 
 if __name__ == '__main__':
