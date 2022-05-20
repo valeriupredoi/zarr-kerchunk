@@ -1,0 +1,11 @@
+---
+name: zarr-kerchunk
+channels:
+  - conda-forge
+
+dependencies:
+  - dask
+  - kerchunk
+  - netcdf4
+  - xarray
+  - zarr
