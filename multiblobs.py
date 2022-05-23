@@ -28,7 +28,9 @@ def build_zarr_array():
     store = zarr.DirectoryStore('data/array.zarr')
     z = zarr.zeros((10, 10), chunks=(5, 5), store=store, overwrite=True)
     z[...] = 42
-    zarr.save("example.zarr", z)
+    # to save with no compression the `save_array()` convenience function
+    # is needed vs the standard `save()`
+    zarr.save_array("example.zarr", z, compressor=None)
 
 
 def _kerzarr_multiblob():
