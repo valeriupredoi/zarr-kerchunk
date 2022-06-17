@@ -1,4 +1,5 @@
 import h5py
+import xarray as xr
 
 classic_cmip5_test_file = r"/home/valeriu/climate_data/cmip5/output1/MPI-M/MPI-ESM-LR/historical/mon/atmos/Amon/r1i1p1/v20120315/ta_Amon_MPI-ESM-LR_historical_r1i1p1_200001-200512.nc"
 bit64_cmip5_test_file = r"/home/valeriu/climate_data/cmip5/output1/NOAA-GFDL/GFDL-ESM2G/historical/mon/atmos/Amon/r1i1p1/v20120412/ta_Amon_GFDL-ESM2G_historical_r1i1p1_200101-200512.nc"
@@ -29,9 +30,43 @@ try:
 except OSError as exc:
     print(exc)
 
-# CMIP5 64-bit offset is suffering too
+# BUT a single pass through Xarray's converter does the trick!
+# Caveat: need disk space to save it in netCDF4
+xr.open_dataset(classic_cmip5_test_file)[['ta']].to_netcdf('classic-outfile.nc')
+classic_reformed = r"/home/valeriu/zarr-kerchunk/classic-outfile.nc"
 try:
-    with h5py.File(bit64_cmip5_test_file, 'r') as fout:
-        print(fout)
+    with h5py.File(classic_reformed, 'r') as fout:
+        print(f"netcdf4 file {fout} fresh from netCDF3 via Xarray")
+        print(f"Data file keys {list(fout.keys())}")
+        print("Variable is: ta")
+        ds = fout['ta'].id
+
+        num_chunks = ds.get_num_chunks()
+        print("h5py number of chunks", num_chunks)
+        for j in range(num_chunks):
+            si = ds.get_chunk_info(j)
+            print("Blob (Slice) chunk offset", si.chunk_offset)
+            print("Blob (Slice) byte offset", si.byte_offset)
+            print("Blob (Slice) size", si.size)
+except OSError as exc:
+    print(exc)
+
+# CMIP5 64-bit offset is suffering too
+xr.open_dataset(bit64_cmip5_test_file)[['ta']].to_netcdf('bit64-outfile.nc')
+bit64_reformed = r"/home/valeriu/zarr-kerchunk/bit64-outfile.nc"
+try:
+    with h5py.File(bit64_reformed, 'r') as fout:
+        print(f"netcdf4 file {fout} fresh from netCDF3-64bit_offset via Xarray")
+        print(f"Data file keys {list(fout.keys())}")
+        print("Variable is: ta")
+        ds = fout['ta'].id
+
+        num_chunks = ds.get_num_chunks()
+        print("h5py number of chunks", num_chunks)
+        for j in range(num_chunks):
+            si = ds.get_chunk_info(j)
+            print("Blob (Slice) chunk offset", si.chunk_offset)
+            print("Blob (Slice) byte offset", si.byte_offset)
+            print("Blob (Slice) size", si.size)
 except OSError as exc:
     print(exc)
