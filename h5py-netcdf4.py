@@ -27,18 +27,18 @@ with h5py.File(cmip6_test_file, 'r') as fout:
     print("Analyzing first 3 chunks")
     for j in range(3):
         print(f"Chunk index {j}")
-        si = ds_id.get_chunk_info(j)
+        si = ds_id.get_chunk_info(j)  # return a StoreInfo object
         print("Blob (Slice) chunk offset", si.chunk_offset)
         print("Blob (Slice) byte offset", si.byte_offset)
         print("Blob (Slice) size", si.size)
 
     # slice this cake
-    h5py_slice = ds[0:2]
+    h5py_slice = ds[0:2]  # returns an array
     print(f"Slice on first dimension [0:2] {h5py_slice}")
 
     # multi block slice (hyperslab)
     multi_block = h5py.MultiBlockSlice(start=1, count=1, stride=2, block=2)
-    multi_slice = ds[multi_block]
+    multi_slice = ds[multi_block]  # returns an array
     print(f"Multiblock slice {multi_slice}")
 
     # get chunk info for slice
@@ -51,8 +51,8 @@ with h5py.File(cmip6_test_file, 'r') as fout:
     chunk_means = []
     chunk_means_info = []
     for cidx in range(num_chunks):
-        si = ds_id.get_chunk_info(cidx)
-        chunk_array = ds[cidx]
+        si = ds_id.get_chunk_info(cidx)  # returns a StoreInfo object
+        chunk_array = ds[cidx]  # returns an array
         # need to mask off masked values of 1e20
         masked_chunk_array = np.ma.masked_where(chunk_array == 1.e20,
                                                 chunk_array)
