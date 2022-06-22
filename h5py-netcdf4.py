@@ -1,5 +1,7 @@
 import h5py
-import xarray as xr
+import numpy as np
+
+# import xarray as xr
 
 
 # CMIP5 files
@@ -41,9 +43,24 @@ with h5py.File(cmip6_test_file, 'r') as fout:
 
     # get chunk info for slice
     idx1 = 0
-    idx2 = 2
     si = ds_id.get_chunk_info(idx1)
+    # NOTE: we can't get arbitrary SLICE info, but only CHUNK info
     print(f"Slice chunk info is {si}")
+
+    # so an intermediate mean operation can be done on each chunk
+    chunk_means = []
+    chunk_means_info = []
+    for cidx in range(num_chunks):
+        si = ds_id.get_chunk_info(cidx)
+        chunk_array = ds[cidx]
+        # need to mask off masked values of 1e20
+        masked_chunk_array = np.ma.masked_where(chunk_array == 1.e20,
+                                                chunk_array)
+        chunk_mean = np.ma.mean(masked_chunk_array)
+        chunk_means.append(chunk_mean)
+        chunk_means_info.append(si)
+        print(f"Local mean per chunk is {chunk_mean}")
+        print(f"Chunk info is {si}")
 
 
 # CMIP5 stuff
