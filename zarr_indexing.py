@@ -1,5 +1,6 @@
 import h5py
 import itertools
+import numpy as np
 import os
 import zarr
 
@@ -108,9 +109,23 @@ def h5py_chunk_slice_info():
               list(PCI)[0][1] * ds.dtype.itemsize)
         print("\n")
 
-        # kerchunk it
-        zarr_ed = SingleHdf5ToZarr(ds)
-        print(zarr_ed)
+        # kerchunk it!
+        ds = SingleHdf5ToZarr(buf).translate()
+        print("\nKerchunkIT stuffs")
+        print("==================")
+        no_chunks = len(ds["refs"].keys()) - 3
+        print(f"Dataset number of chunks is {no_chunks}")
+        print(f"(0, 0, 0) Chunk index", ds["refs"]["test/0.0.0"])
+        print(f"(0, 0, 5) Chunk index", ds["refs"]["test/0.0.5"])
+        print(f"(0, 5, 0) Chunk index", ds["refs"]["test/0.5.0"])
+        chunk_sizes = []
+        for val in ds["refs"].values():
+            if isinstance(val[2], int) or isinstance(val[2], float):
+                chunk_sizes.append(val[2])
+        print("Min chunk size", np.min(chunk_sizes))
+        print("Max chunk size", np.max(chunk_sizes))
+        print("Total chunk size", np.sum(chunk_sizes))
+        print("\n")
 
 
 def zarr_chunk_slice_info():
@@ -153,6 +168,9 @@ def zarr_chunk_slice_info():
         print("Chunk position", sels[j])
         print("Chunk size", ch_sizes[j])
 
+    print("Min chunk size", np.min(ch_sizes))
+    print("Max chunk size", np.max(ch_sizes))
+    print("Total chunk size", np.sum(ch_sizes))
 
     tot_size = ds.size * ds.dtype.itemsize
     print(f"\nTotal chunks size {tot_size}")
