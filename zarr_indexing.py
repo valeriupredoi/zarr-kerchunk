@@ -111,20 +111,20 @@ def h5py_chunk_slice_info():
 
         # kerchunk it!
         ds = SingleHdf5ToZarr(buf).translate()
-        print("\nKerchunkIT stuffs")
-        print("==================")
+        print("\nKerchunk-IT stuffs")
+        print("======================")
         no_chunks = len(ds["refs"].keys()) - 3
         print(f"Dataset number of chunks is {no_chunks}")
-        print(f"(0, 0, 0) Chunk index", ds["refs"]["test/0.0.0"])
-        print(f"(0, 0, 5) Chunk index", ds["refs"]["test/0.0.5"])
-        print(f"(0, 5, 0) Chunk index", ds["refs"]["test/0.5.0"])
+        print(f"(0, 0, 0) Chunk: offset and size:", ds["refs"]["test/0.0.0"][1], ds["refs"]["test/0.0.0"][2])
+        print(f"(0, 0, 5) Chunk: offset and size:", ds["refs"]["test/0.0.5"][1], ds["refs"]["test/0.0.5"][2])
+        # print(f"(0, 5, 0) Chunk: offset and size:", ds["refs"]["test/0.5.0"][1], ds["refs"]["test/0.5.0"][2])
         chunk_sizes = []
         for val in ds["refs"].values():
             if isinstance(val[2], int) or isinstance(val[2], float):
                 chunk_sizes.append(val[2])
         print("Min chunk size", np.min(chunk_sizes))
         print("Max chunk size", np.max(chunk_sizes))
-        print("Total chunk size", np.sum(chunk_sizes))
+        print("Total size (sum of chunks), UNCOMPRESSED:", np.sum(chunk_sizes))
         print("\n")
 
 
@@ -164,16 +164,17 @@ def zarr_chunk_slice_info():
     print("\nAnalyzing 0th and 5th chunks")
     for j in [0, 5]:
         print(f"Chunk index {j}")
-        print("Chunk index offset", offsets[j])
-        print("Chunk position", sels[j])
-        print("Chunk size", ch_sizes[j])
+        print("Chunk index offset:", offsets[j])
+        print("Chunk position:", sels[j])
+        print("Chunk size:", ch_sizes[j])
 
-    print("Min chunk size", np.min(ch_sizes))
-    print("Max chunk size", np.max(ch_sizes))
-    print("Total chunk size", np.sum(ch_sizes))
+    print("\nChunks information")
+    print("Min chunk size:", np.min(ch_sizes))
+    print("Max chunk size:", np.max(ch_sizes))
+    print("Total chunks size COMPRESSED:", np.sum(ch_sizes))
 
     tot_size = ds.size * ds.dtype.itemsize
-    print(f"\nTotal chunks size {tot_size}")
+    print(f"\nTotal size (sum of chunks), COMPRESSED: {tot_size}")
 
     # slice this cake
     print("\nNow looking at some slices:")
