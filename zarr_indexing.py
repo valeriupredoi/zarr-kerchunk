@@ -4,6 +4,7 @@ import os
 import zarr
 
 from io import BytesIO
+from kerchunk.hdf import SingleHdf5ToZarr
 from zarr.indexing import PartialChunkIterator
 
 
@@ -83,6 +84,8 @@ def h5py_chunk_slice_info():
         for j in [0, 5]:
             print(f"Chunk index {j}")
             si = ds_id.get_chunk_info(j)  # return a StoreInfo object
+            # si has attrs: 'byte_offset', 'chunk_offset', 'count',
+            # 'filter_mask', 'index', 'size'
             print("Chunk index offset", si.chunk_offset)
             print("Chunk byte offset", si.byte_offset)
             print("Chunk size", si.size)
@@ -99,6 +102,15 @@ def h5py_chunk_slice_info():
         print("Slice offset and size:", list(PCI)[0][0], "and",
               list(PCI)[0][1] * ds.dtype.itemsize)
         print("\n")
+        print(f"Slice Dataset[4:7] shape {data_slice.shape}")
+        PCI = PartialChunkIterator((slice(4, 7, 1), ), ds.shape)
+        print("Slice offset and size", list(PCI)[0][0], "and",
+              list(PCI)[0][1] * ds.dtype.itemsize)
+        print("\n")
+
+        # kerchunk it
+        zarr_ed = SingleHdf5ToZarr(ds)
+        print(zarr_ed)
 
 
 def zarr_chunk_slice_info():
@@ -155,7 +167,7 @@ def zarr_chunk_slice_info():
     print("\n")
     data_slice = ds[4:7]  # zarr data slice
     print(f"Slice Dataset[4:7] shape {data_slice.shape}")
-    PCI = PartialChunkIterator((slice(0, 2, 1), ), ds.shape)
+    PCI = PartialChunkIterator((slice(4, 7, 1), ), ds.shape)
     print("Slice offset and size", list(PCI)[0][0], "and",
           list(PCI)[0][1] * ds.dtype.itemsize)
     print("\n")
